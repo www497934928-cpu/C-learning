@@ -608,11 +608,3 @@ These are mistakes I have actually made. Scan this list before writing any code.
     - The size is set by `[100]` in `char line[100]`.
 
 ---
-
-## Chapter 6: Suggested Study Order for Tomorrow
-
-1. First re-read **Chapter 6, the mistake checklist**, recalling "why this is wrong" for each item.
-2. Close the notes and, from memory, write out the robust structure of `compare_two_numbers.c` (no peeking).
-3. Open Visual Studio, create a new project, and type all three programs in by hand (no copy-paste).
-4. Change one condition on purpose: turn `Max` into "return the smaller value", to feel how `return` works.
-5. Write a fourth small program: ask the user for an integer and decide whether it is odd or even (hint: `n % 2 == 0` means even).
