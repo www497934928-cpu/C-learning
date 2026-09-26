@@ -1,9 +1,3 @@
-#/*
- * 程序名：compare_two_numbers.c
- * 功能：从键盘读取两个整数（用英文逗号隔开），
- *       若格式错误或未使用英文逗号，则提示并重新输入，
- *       最后输出两个数中的较大值。
- */
 
 #define _CRT_SECURE_NO_WARNINGS        // 关闭 VS 对 scanf 等函数的安全警告
 #include <stdio.h>                    // 提供 printf / fgets / sscanf
