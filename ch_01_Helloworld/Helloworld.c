@@ -1,5 +1,7 @@
-//頭文件
 
+// 关闭 VS 对 scanf 等函数的安全警告
+#define _CRT_SECURE_NO_WARNINGS
+//頭文件
 #include <stdio.h>
 
 //主函數，一個程序只能有一個主函數

@@ -1,3 +1,6 @@
+// 关闭 VS 对 scanf 等函数的安全警告
+
+#define _CRT_SECURE_NO_WARNINGS
 #include <stdio.h>
 
 int main(void)//int一個整數，main為主函數，void表示無參數
