@@ -1,0 +1,7 @@
+<Solution>
+  <Configurations>
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Project Path="ch_02_increment_and_compound.vcxproj" Id="c6f993ac-5fec-4f15-8c62-a281008aba1a" />
+</Solution>
