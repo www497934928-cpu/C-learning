@@ -30,10 +30,11 @@
 - [Day 2 (2 programs)](#day-2)
   - [Chapter 5 Operator Precedence and Associativity](#chapter-5-operator-precedence-and-associativity)
   - [Chapter 6 Increment/Decrement and Compound Assignment](#chapter-6-incrementdecrement-and-compound-assignment)
-- [Day 3 (1 program)](#day-3)
+- [Day 3 (4 programs)](#day-3)
   - [Chapter 7 The for Loop: Sums, Products, and the Loop Variable](#chapter-7-the-for-loop-sums-products-and-the-loop-variable)
   - [Chapter 8 break and continue](#chapter-8-break-and-continue)
-- [Appendix: Mistake Checklist (Day 3)](#appendix-mistake-checklist-day-3)
+  - [Chapter 9 The Three Shapes of if, Nested Loops, and Breaking Out](#chapter-9-the-three-shapes-of-if-nested-loops-and-breaking-out)
+  - [Chapter 10 Guess the Number: Random Numbers and Robust Input](#chapter-10-guess-the-number-random-numbers-and-robust-input)
 
 ---
 
@@ -100,6 +101,8 @@ F:\Github_C_learning\
 ├─ ch_01_Helloworld\
 ├─ ch_02_increment_and_compound\
 ├─ ch_03_loop_sum_for\
+├─ ch_03_if_else_nested\
+├─ ch_03_guess_number\
 └─ Directory.Build.props
 ```
 
@@ -725,7 +728,7 @@ q = 4, n = 4
 
 ## Day 3
 
-> Folder prefix `ch_03`; 2 programs written that day, covering Chapters 7 and 8: the `for` loop, then `break` and `continue`. The `for` syntax itself is small, but the exercises that went with it managed to hit nearly every mistake a beginner can make, so these two chapters run longer than the first two days combined.
+> Folder prefix `ch_03`; 4 programs written that day, covering Chapters 7–10: the `for` loop, `break` / `continue`, `if` and nested loops, then the first "complete little game". The syntax itself is small, but the exercises that went with it managed to hit nearly every mistake a beginner can make, so these four chapters run longer than the first two days combined.
 
 ### Chapter 7 The for Loop: Sums, Products, and the Loop Variable
 
@@ -1159,7 +1162,7 @@ for (i = 1; i <= 6; i++) {
 
 #### 8.10 One trap left for later
 
-`break` exits **only the loop it sits in**. With a single loop there is no ambiguity; once nested loops arrive (a loop inside a loop), `break` leaves just the innermost one and the outer loop carries on. That day will deal with it; for now, remember "nearest".
+`break` exits **only the loop it sits in**. With a single loop there is no ambiguity; once nested loops arrive (a loop inside a loop), `break` leaves just the innermost one and the outer loop carries on. That day is [Chapter 9, section 9.6](#96-break-exits-only-the-loop-it-sits-in); for now, remember "nearest".
 
 #### 8.11 Actual output (all 13 sections, measured)
 
@@ -1192,87 +1195,441 @@ for (i = 1; i <= 6; i++) {
 
 ---
 
-## Appendix: Mistake Checklist (Day 3)
+### Chapter 9 The Three Shapes of if, Nested Loops, and Breaking Out
 
-> Pitfalls from days 1–2 are folded into the "Pitfalls" section of each chapter. This list gathers day 3 together (`for` loops plus `break` / `continue`) — skim it before writing code.
-> Items 1–12 are about `for`; items 13–20 are about `break` / `continue`.
+**Source file: `if_else_nested.c` (`ch_03_if_else_nested`)**
 
-1. **An extra semicolon after `for` / `if` / `while`**
-   - `for (i = 1; i <= 3; i++);` → the body is an empty statement; the loop spins and the next statement just runs once. Very hard to spot.
-   - `while (i <= 20;)` puts the semicolon **inside** the parentheses → compile error.
+The first of the two programs I wrote that day. I thought I already knew `if`; what actually stopped me was something else — which `if` an `else` belongs to, and where `break` lands once you put a loop inside a loop. It also pays off the debt from 8.10 in the previous chapter (`break` exits only one level).
 
-2. **Missing semicolon at the end of a statement, or writing a colon `:`**
-   - Statements always end with `;`. A colon belongs only after `case` in a `switch`.
-   - Inside `for (...)` the three clauses are separated by **semicolons**; **commas** only join several assignments within one clause.
+#### 9.1 The three shapes
 
-3. **Loop variable not initialized**
-   - `while (i <= 20)` needs `i = 1;` above it. `for` does this in clause 1; `while` does not.
+| Shape | Form | How many branches run |
+| --- | --- | --- |
+| bare `if` | `if (...) A;` | 0 or 1 |
+| `if-else` | `if (...) A; else B;` | **exactly one, always** |
+| `else-if` chain | `if ... else if ... else` | stops at the first match |
 
-4. **Forgetting the step → infinite loop**
-   - `i` never changes, the condition never fails, the console floods. Press **Ctrl + C**.
+A bare `if` means "do it if the condition holds, otherwise forget it". There is a trap in these two lines:
 
-5. **Not resetting the accumulator, or starting a product at 0**
-   - Sums start at `sum = 0`, products at `acc = 1`.
-   - Before reusing an accumulator for a second loop, write `sum = 0;` — with **no `int`**, since redeclaring gives error `C2374`.
+```c
+if (i > 5)
+    printf("1) i > 5, printed\n");
+printf("   always printed\n");       // runs unconditionally
+```
 
-6. **Closing the `printf` quote too early**
-   - `printf("AVG2"=%.2f\n", ...)` is wrong: the specifiers `%.2f`, `\n` and the label **all** belong **inside** the quotes; variables go **outside**.
-   - Order to type it: **empty pair of quotes → fill in text and specifiers → add the comma and variables outside → add the final semicolon**.
+The second line is indented exactly like the first, and it is **not inside the `if`**. Braces decide what belongs to the `if`, not indentation — I already got burned by this with `for` in Chapter 7, and here it comes again.
 
-7. **Full-width (Chinese) punctuation sneaking into code**
-   - `；` `，` `（）` `“”` `＝` are all rejected, and the error text is baffling (e.g. `expected ';' before '；'`).
-   - Permanent fix: enable "use English punctuation in Chinese mode" in the IME, or lock the IME to English while coding.
+`if-else`: one of the two, always exactly one. Never both, never neither.
 
-8. **Indentation lies: it looks inside the loop but is not**
-   - Without braces, `for` governs **only the single statement that follows it**.
-   - No amount of indentation changes the result; **only braces do**. Always write `{}`.
+`else-if` chain: tried top to bottom, and **the first match leaves the whole chain** — the conditions below are never even tested. The `chain done` line at the end is the proof: what you leave is the `if` chain, not the program.
 
-9. **Assuming `i` after the loop is "the last value that entered"**
-   - It is actually **the first value that fails the condition**, one step beyond (`i < 3` ends with `i = 3`, not 2).
-   - With a step greater than 1, write out the sequence instead of using the "±1" shortcut.
+#### 9.2 Order the conditions strictest first
 
-10. **Integer division truncates**
-    - `385 / 10` is **38**, not 38.5.
-    - To keep the fraction you must convert **before** dividing: `(double)sum / 10`. Switching to `%f` afterwards does not help.
+`score = 85` walking down:
 
-11. **Misreading compound assignment as "three numbers added"**
-    - `sum += i` means `sum = sum + i` (adds to the **current** value), not "sum plus i".
-    - Whenever two operators sit glued together, expand it to the long form first.
+| Order | Condition | for 85 | Outcome |
+| --- | --- | --- | --- |
+| 1 | `>= 90` | false | move down |
+| 2 | `>= 80` | **true** | print B, look no further |
+| 3 | `>= 70` | (never reached) | — |
+| `else` | catch-all | (never reached) | — |
 
-12. **Copying the previous program's range or variable**
-    - Writing 1..100 when the exercise says 1..20; printing `i` when you meant `sum`.
-    - After writing, re-check: the bound in the condition, the variable in the body, and which variable you print.
+At first I thought the order did not matter, since all four conditions are there anyway. It does:
 
-13. **Working out `i` after a `break` as "bound + 1"**
-   - With `break`, `i` stops at **the round it jumped out of**; `i++` never ran.
-   - In `for (i = 1; i <= 10; i++)` with `if (i == 4) break;` → `i` is 4, not 5 and not 11.
+| Written as | 85 is graded | 90 is graded |
+| --- | --- | --- |
+| `>=90 → >=80 → >=70` | **B** (right) | A (right) |
+| `>=60 → >=90 → >=80` | **pass (wrong)** | pass (wrong) |
 
-14. **Assuming the statement after `break` still runs**
-   - `break` is walking out the door: everything left in that round is skipped — remaining statements, `i++`, and every later round.
-   - Only what is written **before** the `break` counts as executed.
+A score of 90 gets caught by the first `>=60` and graded "pass". So: **highest threshold first**, and once it is written, run 90, 80 and 70 through it to see which branch catches each.
 
-15. **Ignoring the position of `break` / `continue`**
-   - Written **before** `sum += i` → that round's `i` is never added.
-   - Written **after** → that round's `i` was already added.
-   - One position apart, and `sum` differs by a whole round's increment (measured: 10).
+#### 9.3 Trap 1: else binds to the nearest if
 
-16. **Treating `continue` as `break`**
-   - With `continue`, `i++` **runs**; the loop finishes normally and `i` is "bound + 1".
-   - With `break`, `i++` **does not run**; `i` stays at the triggering round.
-   - That single point — did `i++` run — is the watershed.
+The two blocks differ only in the sign of `j`:
 
-17. **Thinking `continue` re-checks the same `i`**
-   - It skips the rest of **this** round; the next round uses a **new** `i`.
-   - If it re-checked the same `i`, you would have an infinite loop.
+```c
+/* first: i=1, j=1 */
+if (i > 0)
+    if (j > 0)
+        printf("both positive\n");
+    else
+        printf("???\n");           // not printed: j>0 holds, so this is unreachable
 
-18. **Putting `continue` at the end of the loop body**
-   - Nothing follows it, so it skips air and the result is the same as not writing it.
-   - Check: is there any statement after the `continue`?
+/* second: i=1, j=-1 */
+if (i > 0)
+    if (j > 0)
+        printf("inner\n");
+    else
+        printf("inner else taken (i=%d j=%d)\n", i, j);   // this one does print!
+```
 
-19. **Getting the equality wrong in the `if`**
-   - `sum > 15` and `sum >= 15` differ by one round: at exactly 15, only the latter fires.
-   - Same rule as Chapter 7's "with an equals sign it runs one extra step", just moved into an `if`.
+The second one is what convinced me. **The outer `i > 0` holds**, so if that `else` really belonged to the outer `if` it could not possibly run. Seeing it print is how I realised the `else` belongs to the **inner `if (j > 0)`**.
 
-20. **`break` exits only one level**
-   - No ambiguity with a single loop. With nested loops it leaves only the **innermost** one and the outer loop continues.
-   - Escaping several levels at once needs a flag variable — that waits for the nesting day.
+> `else` always goes with the **nearest unmatched `if`**, and how you indent has nothing to do with it.
+
+gcc names this one nicely: `-Wdangling-else`.
+
+The cure is braces — with them the binding is nailed down:
+
+```c
+if (i > 0) {
+    if (j > 0) {
+        printf("both\n");
+    }
+}
+else {                              /* now it really belongs to the outer if */
+    printf("outer else\n");
+}
+```
+
+This prints only `braces fix it`. Since `i > 0` holds, the outer `else` should not run — and printing nothing is exactly what "bound correctly" looks like.
+
+#### 9.4 Trap 2: one equals sign
+
+```c
+i = 0;
+if (i = 5)                          /* puts 5 into i, then tests i's truth value */
+    printf("5) entered, i becomes %d\n", i);   /* prints: i becomes 5 */
+```
+
+That single `=` does **two damaging things**, and the second one is the sneakier of the pair:
+
+1. The condition is an assignment whose value is 5, and **nonzero means true** → it is always taken, the `else` is unreachable.
+2. `i` gets quietly changed to 5. That is the real trouble: everything later that reads `i` is now wrong, and you would never think to look at this line.
+
+gcc's warning is `-Wparentheses`, roughly "did you mean `==`?".
+
+A trick I picked up later: put the constant on the left, `if (5 == i)`. Slip and drop an equals sign and it becomes `5 = i`, which will not compile. `i = 5` is perfectly legal, so the compiler can only warn — and if you do not read warnings, it just goes through.
+
+#### 9.5 Nested loops: the outer one takes a step, the inner one spins a circle
+
+```c
+for (i = 1; i <= 3; i++) {
+    for (j = 1; j <= 2; j++) {      /* every outer step, the inner loop runs twice */
+        printf("   i=%d j=%d\n", i, j);
+    }
+}
+```
+
+The saying: *the outer one is slow, the inner one fast, like the hour hand and the minute hand*. 3 × 2 = 6 runs in total.
+
+I first worked that out as 5 (3+2) and only noticed when the output had six lines — it is **multiplied**, not added.
+
+One more thing I got wrong: I expected the inner `j` to carry on from the 2 of the previous round. It does not. `j = 1` sits in clause 1 of the inner `for`, so it starts over on every outer step: 1, 2, 1, 2.
+
+#### 9.6 break exits only one level (paying off 8.10)
+
+```c
+for (i = 1; i <= 3; i++) {
+    for (j = 1; j <= 3; j++) {
+        if (j == 2)
+            break;                  /* exits for(j) only */
+        printf("   i=%d j=%d\n", i, j);
+    }
+    /* back here; the outer loop continues with the next i */
+}
+```
+
+Output:
+
+```
+i=1 j=1
+i=2 j=1
+i=3 j=1
+```
+
+The inner loop prints only `j=1` each time, but **the outer `i` still runs through 1, 2, 3**.
+
+`break` is "nearest-first": it leaves the loop it is in and stops there; the outer loop knows nothing. I file it as "it jumps out of whichever loop is closest". `continue` is the same, it only minds its own level (see 9.8).
+
+#### 9.7 Leaving several levels: raise a flag
+
+```c
+int flag = 0;                   /* 0 = keep going, 1 = stop */
+int hit_i = 0, hit_j = 0;
+
+for (i = 1; i <= 5 && !flag; i++) {      /* outer condition gains !flag */
+    for (j = 1; j <= 5; j++) {
+        if (i * j == 6) {
+            flag = 1;           /* raise the flag */
+            hit_i = i;
+            hit_j = j;
+            break;              /* leave the inner loop first */
+        }
+    }
+}
+```
+
+Two steps:
+
+1. **Inner loop**: on a hit, set `flag = 1`, then `break` out.
+2. **Outer loop**: hang `&& !flag` on its condition. When the round ends and control comes back to the outer test, `!flag` is already false, so the outer loop quits.
+
+Measured: `i*j==6 at i=2 j=3, flag=1` — hit at `i=2 j=3`, and the outer loop never runs 3, 4, 5.
+
+This is the `ok` flag from `compare_two_numbers.c` (Chapter 4) under a different name; `found` in the next chapter is the same thing again. All of them say the same thing to the outer loop: done, pack up.
+
+C has no keyword for leaving several loops at once (`goto` can, but nobody recommends it), so a flag is the way.
+
+#### 9.8 continue inside nested loops
+
+```c
+sum = 0;
+for (i = 1; i <= 3; i++) {
+    for (j = 1; j <= 3; j++) {
+        if (j == 2)
+            continue;           /* skips this round, but j++ still runs */
+        sum += i * j;
+    }
+}
+printf("9) sum=%d i=%d j=%d\n", sum, i, j);   /* 24 4 4 */
+```
+
+| `i` | `j = 1` | `j = 2` | `j = 3` | subtotal |
+| --- | --- | --- | --- | --- |
+| 1 | +1 | skipped | +3 | 4 |
+| 2 | +2 | skipped | +6 | 8 |
+| 3 | +3 | skipped | +9 | 12 |
+| | | | **total** | **24** |
+
+Afterwards `i = 4` and `j = 4` — both ended **normally** (bound + 1), because `continue` does not skip `j++`. Chapter 8's rule survives being nested.
+
+#### 9.9 Actual output
+
+```
+1) i > 5, printed
+   always printed
+2) 3 is odd
+3) 85 -> B
+   chain done
+4) both positive
+4) inner else taken (i=1 j=-1)
+4) braces fix it
+5) entered, i becomes 5
+5) i == 5 false, i still 0
+6) nested:
+   i=1 j=1
+   i=1 j=2
+   i=2 j=1
+   i=2 j=2
+   i=3 j=1
+   i=3 j=2
+7) break inner only:
+   i=1 j=1
+   i=2 j=1
+   i=3 j=1
+8) i*j==6 at i=2 j=3, flag=1
+9) sum=24 i=4 j=4
+```
+
+Compiling throws three warnings: two `-Wdangling-else` and one `-Wparentheses`. Those traps are left in the code on purpose — the warnings are the compiler poking me in the ribs.
+
+#### 9.10 Pitfalls
+
+- Assuming `else` follows indentation → it binds to the **nearest unmatched `if`**; braces are the only way to pin it down.
+- Writing `=` where `==` was meant → the condition is always true, and the variable gets overwritten behind your back. That side effect is the hardest part to find.
+- Expecting `break` to escape several levels → it leaves **the one loop it is in**; raise a flag to go further.
+- Adding the run counts of nested loops (3+2) instead of **multiplying** them (3×2 = 6).
+- Expecting the inner `j` to carry on → `j = 1` sits in clause 1 and re-initialises on every outer step.
+- Ordering an `else-if` chain loose-to-strict → boundary values get stolen early (90 graded as "pass").
+- Thinking a match in the `if` chain ends the program → only the chain is left; what follows still runs.
+- Using the same variable for both levels (both `i`) → the inner loop wrecks the outer counter and everything goes wrong.
+
+---
+
+### Chapter 10 Guess the Number: Random Numbers and Robust Input
+
+**Source file: `guess_number.c` (`ch_03_guess_number`)**
+
+The second program of the day, and the longest one so far. It uses nearly everything from the first nine chapters: a `while` loop, a three-way `if`, a flag variable, `break`, `continue`, and the return value of `scanf`.
+
+| Item | Rule |
+| --- | --- |
+| Range | 1–100 (the computer picks a number) |
+| Tries | 7 |
+| Feedback | too big / too small |
+| Bad input | ask again — **the try is free** |
+
+#### 10.1 Random numbers: srand seeds, rand draws
+
+```c
+#include <stdlib.h>             /* rand / srand */
+#include <time.h>               /* time */
+
+srand((unsigned)time(NULL));    /* seed: once, at the start */
+secret = rand() % 100 + 1;      /* 1..100 */
+```
+
+The range comes out like this:
+
+| Expression | Range |
+| --- | --- |
+| `rand()` | 0 .. `RAND_MAX` |
+| `rand() % 100` | 0 .. 99 |
+| `rand() % 100 + 1` | **1 .. 100** |
+
+For `[min, max]` write `rand() % (max - min + 1) + min`. It is a remainder, so the number after `%` decides how many values there are.
+
+The first version I wrote had `rand()` and no `srand`, and every run produced the same sequence — I was convinced I had broken something. So: **`srand` once, at the top of `main`.**
+
+Inside the loop it is worse: within one second `time(NULL)` is the same value, so you reseed with the same number over and over and keep drawing the same thing.
+
+> Include the header for whatever you use: `rand` / `srand` live in `stdlib.h`, `time` in `time.h`.
+
+#### 10.2 Two conditions on one loop
+
+```c
+while (count < max_try && !found)
+```
+
+| Condition | Guards | When it turns false |
+| --- | --- | --- |
+| `count < max_try` | tries remaining | all 7 used → **lost** |
+| `!found` | not guessed yet | guessed → **won** |
+
+Both sides of `&&` must hold to go on; either one going false ends it. Afterwards `if (found)` sorts out which ending it was:
+
+```c
+if (found) printf("You won! ...\n");
+else       printf("You lost! ...\n");
+```
+
+#### 10.3 The return value of scanf
+
+```c
+ret = scanf("%d", &guess);
+```
+
+I had been using this function for three days before I found out it returns anything. And **what it returns is how many items it read, not the number** — the number is in `guess`.
+
+| `ret` | Meaning | What the program does |
+| --- | --- | --- |
+| `1` | one integer read | carry on, `count++` |
+| `0` | input present, but not an integer | warn + flush + `continue` |
+| `EOF` (that is, `-1`) | input ran out (`Ctrl+Z`, or the pipe went dry) | warn + `break` |
+
+It goes into `ret` because three tests follow. Writing `if (scanf(...) == 1)` allows only one test, and every extra `scanf` you write really does consume more input — it is not a free "let me check".
+
+#### 10.4 A bad guess costs nothing: look at where count++ sits
+
+```c
+if (ret != 1) {              /* input present, but not an integer */
+    printf("  Not a number, try again (this try is FREE)\n");
+
+    while ((ch = getchar()) != '\n' && ch != EOF)
+        ;                    /* empty body: read to end of line, clearing the junk */
+    continue;
+}
+
+/* case three: ret == 1, input is valid, carry on */
+count++;                     /* reaching here means the input was valid */
+```
+
+Three things are packed into that short block:
+
+1. **`continue` skips everything left in the round** — `count++` included. So this round costs no try, and the next prompt still says `[1/7]`.
+2. **The buffer has to be flushed.** Leave those letters there and the next `scanf` reads them again, decides "not a number" again, `continue`s again… I tried it once and the screen went berserk. `while ((ch = getchar()) != '\n' && ch != EOF);` has an empty body (that lone semicolon *is* the body) and reads up to the newline.
+3. **`count++` comes after the check** — that is the real reason only valid input is counted.
+
+Chapter 8 said a `continue` with nothing after it is decoration. Here `count++` and a whole three-way `if` come after it, so it is doing real work.
+
+`ch` must be `int`, not `char`: `getchar` returns an `int` precisely so that `EOF` (usually `-1`) can be represented, and a `char` may never see it.
+
+#### 10.5 The found flag
+
+```c
+else {                     /* neither smaller nor larger, so equal */
+    printf("  *** BINGO! ***\n");
+    found = 1;             /* raise the flag */
+    break;
+}
+```
+
+Both lines are there, and they cover different things:
+
+- `break` leaves the loop on the spot, no more guessing.
+- `found = 1` is for the `if` **outside** the loop, so it can tell "guessed it" from "ran out of tries".
+
+I first thought `break` alone was enough. It is not — you get out either way, but the outside has no idea how you got out, so winning still prints `You lost!`.
+
+#### 10.6 The three-way branch
+
+```c
+if (guess < secret)       printf("  Too small!\n");
+else if (guess > secret)  printf("  Too big!\n");
+else                      printf("  *** BINGO! ***\n");
+```
+
+The third one needs no `else if (guess == secret)` — neither smaller nor larger means equal. A bonus of writing it this way: exactly one of the three runs, so no case can slip through.
+
+#### 10.7 Are 7 tries enough?
+
+Guess the middle of the current range and the range halves:
+
+| Try | 1 | 2 | 3 | 4 | 5 | 6 | 7 |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Candidates left | 50 | 25 | 12 | 6 | 3 | 1 | 0 |
+
+`log₂100 ≈ 6.64` and `2⁷ = 128 > 100`, so **7 is enough** — this game is not luck, it is halving.
+
+#### 10.8 Actual output
+
+> `secret` changes every run; the four transcripts below all come from one session where the answer was 90.
+
+**① Guessed it (6 tries)**
+
+```
+=== Guess the number (1-100), 7 tries ===
+[1/7] Your guess:   Too small!
+[2/7] Your guess:   Too small!
+[3/7] Your guess:   Too small!
+[4/7] Your guess:   Too big!
+[5/7] Your guess:   Too big!
+[6/7] Your guess:   *** BINGO! ***
+You won! Answer = 90, used 6 tries.
+```
+
+**② Bad input is free (the `abc` round costs nothing)**
+
+```
+[1/7] Your guess:   Too small!
+[2/7] Your guess:   Not a number, try again (this try is FREE)
+[2/7] Your guess:   Too small!
+```
+
+**③ Letters glued to a number (`50abc`)**
+
+```
+[1/7] Your guess:   Too small!                                  <- scanf reads 50, returns 1
+[2/7] Your guess:   Not a number, try again (this try is FREE)  <- the leftover abc, next round
+[2/7] Your guess:   *** BINGO! ***
+You won! Answer = 90, used 2 tries.
+```
+
+`scanf("%d")` stops after the `50` and leaves `abc` behind, so the complaint arrives **one round late**. I only worked that out after staring at `[2/7]` appearing twice.
+
+**④ End of input / out of tries**
+
+```
+[1/7] Your guess:   Too small!
+[2/7] Your guess:   Input closed. Game over.
+You lost! Answer was 90. (used 1 tries)
+```
+
+```
+[7/7] Your guess:   Too small!
+You lost! Answer was 90. (used 7 tries)
+```
+
+#### 10.9 Pitfalls
+
+- Missing `&` after the variable: `scanf("%d", guess)` is wrong.
+- Using the return value as the number: `guess = scanf("%d", &guess)` puts 1 or 0 into `guess`.
+- Forgetting `srand` → the same sequence every run, so the game is not random.
+- Putting `srand` inside the loop → reseeding with the same value, the number stops changing.
+- Not flushing on bad input → the same letters are read again and again, an infinite scrolling loop.
+- Declaring the flushing `ch` as `char` → `EOF` may never be seen.
+- Putting `count++` **before** the `continue` → bad input costs a try, contradicting "this try is FREE".
+- Writing `break` but forgetting `found = 1` → you win and it prints `You lost!`.
+- `rand() % 100` is 0..99; drop the `+1` and the range becomes 0..99, so `secret` could be 0.
+- Writing the three-way test as two separate `if`s → it evaluates twice; an `else-if` chain stops at the match.
