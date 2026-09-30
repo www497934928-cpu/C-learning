@@ -32,6 +32,7 @@
   - [Chapter 6 Increment/Decrement and Compound Assignment](#chapter-6-incrementdecrement-and-compound-assignment)
 - [Day 3 (1 program)](#day-3)
   - [Chapter 7 The for Loop: Sums, Products, and the Loop Variable](#chapter-7-the-for-loop-sums-products-and-the-loop-variable)
+  - [Chapter 8 break and continue](#chapter-8-break-and-continue)
 - [Appendix: Mistake Checklist (Day 3)](#appendix-mistake-checklist-day-3)
 
 ---
@@ -724,7 +725,7 @@ q = 4, n = 4
 
 ## Day 3
 
-> Folder prefix `ch_03`; 1 program written that day, covering Chapter 7: the `for` loop. The syntax itself is small, but the loop exercises that went with it managed to hit nearly every mistake a beginner can make, so this chapter runs longer than the first two days combined.
+> Folder prefix `ch_03`; 2 programs written that day, covering Chapters 7 and 8: the `for` loop, then `break` and `continue`. The `for` syntax itself is small, but the exercises that went with it managed to hit nearly every mistake a beginner can make, so these two chapters run longer than the first two days combined.
 
 ### Chapter 7 The for Loop: Sums, Products, and the Loop Variable
 
@@ -961,9 +962,240 @@ AVG2 = 38.50                // (double)385/10
 
 ---
 
+### Chapter 8 break and continue
+
+**Source file: `ch_03_break_continue.c` (`ch_03_break_continue`)**
+
+Both say "if this condition holds, do not follow the normal plan", but they differ sharply in how far they go. I gave each one a comparison, which sticks better than the definitions:
+
+| | Comparison | Rest of this round? | `i++`? | Later rounds? |
+| --- | --- | --- | --- | --- |
+| **`break`** | **walking out the door** | no | **no** | none at all |
+| **`continue`** | **failing the security check** | no | **yes, as usual** | they run |
+
+I had already met `continue` — it is the "no comma found, ask again" line in `compare_two_numbers.c` from Chapter 4. I just did not know its name then; this is where it gets claimed properly.
+
+**Both almost always pair with an `if`**, because they need a reason for "when to jump".
+
+#### 8.1 break: run as soon as the condition holds
+
+```c
+sum = 0;
+for (i = 1; i <= 10; i++) {
+    sum += i;
+    if (sum > 15)       // > 15, not >= 15: sum == 15 does not trigger it
+        break;
+}
+printf("sum = %d, i = %d\n", sum, i);        // 21 6
+```
+
+Round by round:
+
+| Round | i | after `sum += i` | `sum > 15`? | did `i++` run? |
+| --- | --- | --- | --- | --- |
+| 1 | 1 | 1 | no | yes |
+| 2 | 2 | 3 | no | yes |
+| 3 | 3 | 6 | no | yes |
+| 4 | 4 | 10 | no | yes |
+| 5 | 5 | 15 | **no** (15 is not greater than 15) | yes |
+| 6 | 6 | **21** | yes → break | **no** |
+
+#### 8.2 Where does `i` end up after a break?
+
+**`i` stops at the value of the round it jumps out of, because `i++` never gets the chance to run.**
+
+That is a completely different route from the "normal ending" of yesterday:
+
+| | How it ended | What `i` is |
+| --- | --- | --- |
+| normal ending | the condition turns false on its own | the first value that fails (one step past the bound) |
+| **`break`** | forced exit while the condition still **holds** | **that round's value**; `i++` never ran |
+
+```c
+sum = 0;
+for (i = 1; i <= 10; i++) {
+    if (i == 4)
+        break;
+    sum += i;
+}
+printf("sum = %d, i = %d\n", sum, i);        // 6 4
+```
+
+`i` is **4**, not 5. Reaching for yesterday's "bound + 1" rule, the condition here is `i <= 10`, so it is easy to write 11 out of habit — and that is wildly wrong.
+
+**`i++` lives in clause 3 of the `for`, and only runs when a round completes normally. `break` skips that clause entirely.**
+
+#### 8.3 break before or after: different results
+
+The most practical point of this chapter. Two snippets differing in position alone:
+
+```c
+/* A: break first */
+for (i = 1; i <= 8; i++) {
+    if (i == 5) break;      // leaves during the i==5 round
+    sum += i * 2;
+}
+// sum = 20, i = 5
+
+/* B: break last */
+for (i = 1; i <= 8; i++) {
+    sum += i * 2;           // adds first, then decides whether to leave
+    if (i == 5) break;
+}
+// sum = 30, i = 5
+```
+
+**`sum` differs by 10 (that is `5 * 2`), while `i` is identical.**
+
+> **Takeaway: where `break` sits does not change `i`; it only changes whether the statements of that round finished.**
+> Before → that round's `i` never gets added. After → that round's `i` was already added.
+
+#### 8.4 When break never fires, it is just an ordinary for
+
+```c
+sum = 0;
+for (i = 1; i <= 5; i++) {
+    sum += i;
+    if (sum > 1000)     // never true; break never executes
+        break;
+}
+printf("sum = %d, i = %d\n", sum, i);        // 15 6
+```
+
+With a condition that can never hold, `break` is dead weight, and **yesterday's rule applies straight**: `i = 5 + 1 = 6`.
+
+#### 8.5 What break is actually for
+
+The sections above all stop "once some value is reached", which looks like making trouble for yourself. The real use is **stop once found, instead of grinding to the end**:
+
+```c
+int target = 0;
+for (i = 1; i <= 100; i++) {
+    if (i % 7 == 0) {
+        target = i;
+        break;          // found it, leave; no need to test the rest
+    }
+}
+printf("first number divisible by 7: %d, i = %d\n", target, i);   // 7 7
+```
+
+**Without `break`**: the loop runs on to `i = 101`, and `target` ends up holding the **last** match (98) — searching for "the first" silently becomes "the last". No error, just the wrong answer.
+
+#### 8.6 continue: skip this round, carry on with the next
+
+```c
+sum = 0;
+for (i = 1; i <= 6; i++) {
+    if (i == 3)
+        continue;       // during the i==3 round, sum += i does not run
+    sum += i;
+}
+printf("sum = %d, i = %d\n", sum, i);        // 18 7
+```
+
+`1+2+4+5+6 = 18` (3 was skipped), and **`i` is 7, not 3** — with `continue`, `i++` runs as usual and the loop finishes normally.
+
+In the security-check comparison: `i=3` gets turned back, **but it is not re-checked** — the turn passes to `i=4`. Otherwise it would loop forever.
+
+#### 8.7 Where `continue` sits matters the same way
+
+```c
+sum = 0;
+for (i = 1; i <= 6; i++) {
+    sum += i;           // before the continue: runs every round
+    if (i == 3)
+        continue;
+    sum += 100;         // after the continue: skipped in the i==3 round
+}
+printf("sum = %d, i = %d\n", sum, i);        // 521 7
+```
+
+Round by round:
+
+```
+i=1  add i -> 1    add 100 -> 101
+i=2  add i -> 103  add 100 -> 203
+i=3  add i -> 206  continue! skip +100   <- this round only added 3
+i=4  add i -> 210  add 100 -> 310
+i=5  add i -> 315  add 100 -> 415
+i=6  add i -> 421  add 100 -> 521
+```
+
+#### 8.8 A `continue` at the end of the body does nothing
+
+```c
+sum = 0;
+for (i = 1; i <= 4; i++) {
+    sum += i;
+    if (i == 2)
+        continue;       // nothing follows it, so it skips thin air
+}
+printf("sum = %d, i = %d\n", sum, i);        // 10 5
+```
+
+**Identical to not writing `continue` at all.**
+
+The check is simple: **look at what comes after the `continue`. If nothing, it is decoration.**
+
+#### 8.9 Side by side, the difference is clearest
+
+The same loop with one keyword swapped:
+
+```c
+for (i = 1; i <= 6; i++) {
+    if (i == 3) break;      // walks out the door
+    sum += i;
+}
+// sum = 3,  i = 3     1+2, i stops at 3
+
+for (i = 1; i <= 6; i++) {
+    if (i == 3) continue;   // failed the check
+    sum += i;
+}
+// sum = 18, i = 7     1+2+4+5+6, i runs on to 7
+```
+
+`sum` differs by 15, `i` by 4 — **and all of it comes down to whether `i++` ran.**
+
+#### 8.10 One trap left for later
+
+`break` exits **only the loop it sits in**. With a single loop there is no ambiguity; once nested loops arrive (a loop inside a loop), `break` leaves just the innermost one and the outer loop carries on. That day will deal with it; for now, remember "nearest".
+
+#### 8.11 Actual output (all 13 sections, measured)
+
+```
+1) sum = 21, i = 6                      // stop once sum > 15
+2) A: sum = 20, i = 5                   // break first
+3) B: sum = 30, i = 5                   // break last
+4) sum = 6, i = 4                       // i stops at the triggering round
+5) sum = 15, i = 6                      // break never fires
+6) sum = 80, i = 10                     // descending, i -= 2
+7) first number divisible by 7: 7, i = 7
+8) break    -> sum = 3,  i = 3
+   continue -> sum = 18, i = 7
+9) sum = 18, i = 7                      // continue, basic
+10) sum = 37, i = 11                    // skip every multiple of 3
+11) sum = 521, i = 7                    // continue last
+12) sum = 13, i = 0                     // descending + continue
+13) sum = 10, i = 5                     // continue as decoration
+```
+
+#### 8.12 Pitfalls
+
+- Working out `i` after a `break` as "bound + 1" → `i` stops at the triggering round; `i++` never ran.
+- Assuming the statement after `break` still runs → everything left in that round is skipped, `i++` included.
+- Ignoring where `break` sits → before or after `sum += i` changes the result by a whole round's increment.
+- Treating `continue` as `break` → with `continue`, `i++` runs and the loop finishes normally.
+- Thinking `continue` re-checks the same `i` → it skips the rest of *this* round; the next round has a **new** `i`.
+- Putting `continue` at the end of the body → nothing left to skip, so it does nothing.
+- Getting the equality wrong in the `if` → `sum > 15` and `sum >= 15` differ by one round (at exactly 15, only the latter fires).
+
+---
+
 ## Appendix: Mistake Checklist (Day 3)
 
-> Pitfalls from days 1–2 are folded into the "Pitfalls" section of each chapter. This list only covers day 3 (`for` loops). Skim it before writing code.
+> Pitfalls from days 1–2 are folded into the "Pitfalls" section of each chapter. This list gathers day 3 together (`for` loops plus `break` / `continue`) — skim it before writing code.
+> Items 1–12 are about `for`; items 13–20 are about `break` / `continue`.
 
 1. **An extra semicolon after `for` / `if` / `while`**
    - `for (i = 1; i <= 3; i++);` → the body is an empty statement; the loop spins and the next statement just runs once. Very hard to spot.
@@ -1010,3 +1242,37 @@ AVG2 = 38.50                // (double)385/10
 12. **Copying the previous program's range or variable**
     - Writing 1..100 when the exercise says 1..20; printing `i` when you meant `sum`.
     - After writing, re-check: the bound in the condition, the variable in the body, and which variable you print.
+
+13. **Working out `i` after a `break` as "bound + 1"**
+   - With `break`, `i` stops at **the round it jumped out of**; `i++` never ran.
+   - In `for (i = 1; i <= 10; i++)` with `if (i == 4) break;` → `i` is 4, not 5 and not 11.
+
+14. **Assuming the statement after `break` still runs**
+   - `break` is walking out the door: everything left in that round is skipped — remaining statements, `i++`, and every later round.
+   - Only what is written **before** the `break` counts as executed.
+
+15. **Ignoring the position of `break` / `continue`**
+   - Written **before** `sum += i` → that round's `i` is never added.
+   - Written **after** → that round's `i` was already added.
+   - One position apart, and `sum` differs by a whole round's increment (measured: 10).
+
+16. **Treating `continue` as `break`**
+   - With `continue`, `i++` **runs**; the loop finishes normally and `i` is "bound + 1".
+   - With `break`, `i++` **does not run**; `i` stays at the triggering round.
+   - That single point — did `i++` run — is the watershed.
+
+17. **Thinking `continue` re-checks the same `i`**
+   - It skips the rest of **this** round; the next round uses a **new** `i`.
+   - If it re-checked the same `i`, you would have an infinite loop.
+
+18. **Putting `continue` at the end of the loop body**
+   - Nothing follows it, so it skips air and the result is the same as not writing it.
+   - Check: is there any statement after the `continue`?
+
+19. **Getting the equality wrong in the `if`**
+   - `sum > 15` and `sum >= 15` differ by one round: at exactly 15, only the latter fires.
+   - Same rule as Chapter 7's "with an equals sign it runs one extra step", just moved into an `if`.
+
+20. **`break` exits only one level**
+   - No ambiguity with a single loop. With nested loops it leaves only the **innermost** one and the outer loop continues.
+   - Escaping several levels at once needs a flag variable — that waits for the nesting day.
